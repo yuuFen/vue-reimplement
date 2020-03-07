@@ -8,13 +8,13 @@
   <body>
     <div id="app">
       <p>{{name}}</p>
-      <p k-text="name"></p>
+      <p v-text="name"></p>
       <p>{{age}}</p>
       <p>{{doubleAge}}</p>
       <p>{{bar}}</p>
       <p>{{bar.doo}}</p>
-      <input type="text" k-model="name" /> <button @click="changeName">修改</button>
-      <div k-html="html"></div>
+      <input type="text" v-model="name" /> <button @click="changeName">修改</button>
+      <div v-html="html"></div>
     </div>
 
     <script src="compile.js"></script>

@@ -52,40 +52,57 @@ class Compile {
 
   compileText(node) {
     // console.log(RegExp.$1)
-    const keys = RegExp.$1
-    this.update(node, keys, 'text')
+    const exp = RegExp.$1
+    this.update(node, exp, 'text')
   }
 
-  compileElement(node) {}
-
-  update(node, keys, dir) {
+  update(node, exp, dir) {
     const updater = this[dir + 'Updater']
-    updater && updater(node, keys)
+    updater && updater(node, exp)
+    // 注意 this
     const get = this.getContent
     // 形成闭包，和一个 Watcher 实例对应
     new Watcher(
       this.$vm,
-      keys,
+      exp,
       function() {
-        get(keys)
+        get(exp)
       },
       function() {
-        updater && updater(node, keys)
+        updater && updater(node, exp)
       },
     )
   }
 
-  textUpdater = (node, keys) => {
-    node.textContent = this.getContent(keys)
+  // 注意 this
+  textUpdater = (node, exp) => {
+    node.textContent = this.getContent(exp)
   }
 
-  getContent = (keys) => {
+  // 注意 this
+  getContent = (exp) => {
     // 解决嵌套，get 嵌套属性的值
-    const p = keys.split('.')
+    const p = exp.split('.')
     let content = this.$vm[p[0]]
     for (let i = 1; i < p.length; i++) {
       content = content[p[i]]
     }
     return content
+  }
+
+  compileElement(node) {
+    const nodeAttrs = node.attributes
+    Array.from(nodeAttrs).forEach((attr) => {
+      const attrName = attr.name
+      const exp = attr.value
+      if (attrName.indexOf('v-') === 0) {
+        const dir = attrName.substring(2)
+        this[dir] && this[dir](node, exp)
+      }
+    })
+  }
+
+  text(node, exp) {
+    this.update(node, exp, 'text')
   }
 }
