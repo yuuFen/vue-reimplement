@@ -6,10 +6,26 @@
     <title>Document</title>
   </head>
   <body>
+    <div id="app">
+      <p>{{name}}</p>
+      <p k-text="name"></p>
+      <p>{{age}}</p>
+      <p>{{doubleAge}}</p>
+      <p>{{bar}}</p>
+      <p>{{bar.doo}}</p>
+      <input type="text" k-model="name" /> <button @click="changeName">修改</button>
+      <div k-html="html"></div>
+    </div>
+
+    <script src="compile.js"></script>
     <script src="vue.js"></script>
     <script>
       const app = new Vue({
+        el: '#app',
         data: {
+          name: 'I am test.',
+          age: 12,
+          html: '<button>这是⼀一个按钮</button>',
           foo: 'foooooo',
           bar: {
             doo: 'dooooooo',
@@ -17,10 +33,14 @@
         },
       })
 
-      console.log(app.bar);
-      app.bar = 'baaaar'
-      console.log(app.bar);
-      
+      setTimeout(() => {
+        app.name = '666666666666'
+        app.bar.doo = 'oooo'
+        app.bar = 'oooo'
+      }, 1000)
+      // console.log(app['bar.doo'])
+      // app.foo = 'ffff'
+      // console.log(app.bar)
     </script>
   </body>
 </html>
