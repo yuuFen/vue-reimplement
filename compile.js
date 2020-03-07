@@ -32,9 +32,11 @@ class Compile {
       if (node.nodeType === 1) {
         // Element 节点
         console.log('遍历到节点', node.nodeName)
+        this.compileElement(node)
       } else if (this.isInterpolation(node)) {
         // 插值表达式
         console.log('遍历到插值表达式', node.textContent)
+        this.compileText(node)
       }
       // 如果有子节点
       if (node.children && node.childNodes.length > 0) {
@@ -46,5 +48,44 @@ class Compile {
   isInterpolation(node) {
     // 是文本且符合{{...}}
     return node.nodeType === 3 && /\{\{(.*)\}\}/.test(node.textContent)
+  }
+
+  compileText(node) {
+    // console.log(RegExp.$1)
+    const keys = RegExp.$1
+    this.update(node, keys, 'text')
+  }
+
+  compileElement(node) {}
+
+  update(node, keys, dir) {
+    const updater = this[dir + 'Updater']
+    updater && updater(node, keys)
+    const get = this.getContent
+    // 形成闭包，和一个 Watcher 实例对应
+    new Watcher(
+      this.$vm,
+      keys,
+      function() {
+        get(keys)
+      },
+      function() {
+        updater && updater(node, keys)
+      },
+    )
+  }
+
+  textUpdater = (node, keys) => {
+    node.textContent = this.getContent(keys)
+  }
+
+  getContent = (keys) => {
+    // 解决嵌套，get 嵌套属性的值
+    const p = keys.split('.')
+    let content = this.$vm[p[0]]
+    for (let i = 1; i < p.length; i++) {
+      content = content[p[i]]
+    }
+    return content
   }
 }

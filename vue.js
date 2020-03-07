@@ -13,9 +13,10 @@ class Vue {
       this.proxyData(key)
     })
 
-    // 测试
-    new Watcher(this, 'foo')
-    new Watcher(this, 'bar.doo')
+    // new Watcher(this, 'foo')
+    // new Watcher(this, 'bar.doo')
+
+    new Compile(this, options.el)
   }
 
   observe(value) {
@@ -87,16 +88,25 @@ class Dep {
 
 // 创建 Watcher：与视图中的变量对应(出现一次就创建一个 Watcher 实例)
 class Watcher {
-  constructor(vm, key) {
+  constructor(vm, key, get, cb) {
     this.vm = vm
     this.key = key
+    this.cb = cb
+    
+    this.get = get // 获取嵌套属性的方法
+
+    console.log('watcher:', key)
 
     Dep.targetWatcher = this
-    this.vm[this.key] // key解析出来之后为字符串， 但是若如 'bar.doo'，需要额外操作
+    // key解析出来之后为字符串， 但是若如 'bar.doo'，需要额外操作
+    // 访问 bar.doo，会将它同时挂载到 bar 和 doo 的 Dep 实例（也是有必要的）
+    this.get()
     Dep.targetWatcher = null
   }
   update() {
+    // 需要 node
     console.log(this.key, '更新——来自 watcher')
-    // do something
+     // 更新视图
+    this.cb()
   }
 }
