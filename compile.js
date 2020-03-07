@@ -58,13 +58,15 @@ class Compile {
 
   update(node, exp, dir) {
     const updater = this[dir + 'Updater']
+    // 也可以把 updater 的实现直接放在 watcher 里面
+    // 就不用形成闭包，但是这样 watcher 就太臃肿了。
     updater && updater(node, exp)
     // 注意 this
     const get = this.getContent
     // 形成闭包，和一个 Watcher 实例对应
     new Watcher(
       this.$vm,
-      exp,
+      // exp, // 在这里处理
       function() {
         get(exp)
       },
