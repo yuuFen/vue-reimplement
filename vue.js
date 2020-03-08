@@ -16,7 +16,7 @@ class Vue {
     // new Watcher(this, 'foo')
     // new Watcher(this, 'bar.doo')
 
-    new Compile(this, options.el)
+    new Compile(this)
   }
 
   observe(value) {
@@ -36,19 +36,20 @@ class Vue {
     // 递归，处理对象
     this.observe(val)
 
-    //
     const dep = new Dep()
 
-    // 会在 obj 上添加新属性，或者修改现有属性
-    // 所以是个引用变量
+    // 会在 obj 上添加新属性，或者修改现有属性，是个引用变量
+    // 这里导致形成闭包
     Object.defineProperty(obj, key, {
       get() {
         // 若存在 targetWatcher（watcher的构造阶段），则添加
         Dep.targetWatcher && dep.addWatcher(Dep.targetWatcher)
+        // console.log('get');
         return val
       },
       set(newVal) {
         if (newVal !== val) {
+          // console.log('set');
           val = newVal
           // 通知更新
           dep.notify()
@@ -88,8 +89,8 @@ class Dep {
 
 // 创建 Watcher：与视图中的变量对应(出现一次就创建一个 Watcher 实例)
 class Watcher {
-  constructor(vm, get, cb) {
-    this.vm = vm
+  constructor(get, cb) {
+    // this.vm = vm
     // this.key = key
     this.cb = cb
 
@@ -103,8 +104,6 @@ class Watcher {
     Dep.targetWatcher = null
   }
   update() {
-    // 需要 node
-    console.log(this.key, '更新——来自 watcher')
     // 更新视图
     this.cb()
   }

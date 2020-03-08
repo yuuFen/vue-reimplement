@@ -1,8 +1,8 @@
 class Compile {
-  constructor(vm, el) {
+  constructor(vm) {
     // new Watcher 需要 vm
     this.$vm = vm
-    this.$el = document.querySelector(el)
+    this.$el = document.querySelector(this.$vm.$options.el)
 
     if (this.$el) {
       // 提取宿主中模板内容到 fragment 标签（结束后 $el 中没有子元素）
@@ -53,10 +53,10 @@ class Compile {
   compileText(node) {
     // console.log(RegExp.$1)
     const exp = RegExp.$1
-    this.update(node, exp, 'text')
+    this.update(this.$vm, node, exp, 'text')
   }
 
-  update(node, exp, dir) {
+  update(vm, node, exp, dir) {
     const updater = this[dir + 'Updater']
     // 也可以把 updater 的实现直接放在 watcher 里面
     // 就不用形成闭包，但是这样 watcher 就太臃肿了。
@@ -65,7 +65,7 @@ class Compile {
     const get = this.getContent
     // 形成闭包，和一个 Watcher 实例对应
     new Watcher(
-      this.$vm,
+      // vm, // 在这里处理
       // exp, // 在这里处理
       function() {
         get(exp)
@@ -80,6 +80,12 @@ class Compile {
   textUpdater = (node, exp) => {
     node.textContent = this.getContent(exp)
   }
+  htmlUpdater = (node, exp) => {
+    node.innerHTML = this.getContent(exp)
+  }
+  modelUpdater = (node, exp) => {
+    node.value = this.getContent(exp)
+  }
 
   // 注意 this
   getContent = (exp) => {
@@ -91,6 +97,18 @@ class Compile {
     }
     return content
   }
+  setContent = (exp, value) => {
+    const p = exp.split('.')
+    if (p.length === 1) {
+      this.$vm[p] = value
+    } else if (p.length > 1) {
+      let content = this.$vm[p[0]]
+      for (let i = 1; i < p.length - 1; i++) {
+        content = content[p[i]]
+      }
+      content[p[p.length - 1]] = value
+    }
+  }
 
   compileElement(node) {
     const nodeAttrs = node.attributes
@@ -99,12 +117,36 @@ class Compile {
       const exp = attr.value
       if (attrName.indexOf('v-') === 0) {
         const dir = attrName.substring(2)
-        this[dir] && this[dir](node, exp)
+        this[dir] && this[dir](this.$vm, node, exp)
+      } else if (attrName.indexOf('@') === 0) {
+        // @click="handleClick"
+        const dir = attrName.substring(1)
+        this.eventHandler(this.$vm, node, exp, dir)
       }
     })
   }
 
-  text(node, exp) {
-    this.update(node, exp, 'text')
+  text(vm, node, exp) {
+    this.update(vm, node, exp, 'text')
+  }
+
+  html(vm, node, exp) {
+    this.update(vm, node, exp, 'html')
+  }
+
+  model(vm, node, exp) {
+    this.update(vm, node, exp, 'model')
+    node.addEventListener('input', (e) => {
+      this.setContent(exp, e.target.value)
+    })
+  }
+
+  eventHandler(vm, node, exp, dir) {
+    const fn = vm.$options.methods && vm.$options.methods[exp]
+    // console.log(node, exp, dir, fn)
+    if (dir && fn) {
+      // 注意 this
+      node.addEventListener(dir, fn.bind(vm))
+    }
   }
 }

@@ -13,7 +13,9 @@
       <p>{{doubleAge}}</p>
       <p>{{bar}}</p>
       <p>{{bar.doo}}</p>
-      <input type="text" v-model="name" /> <button @click="changeName">修改</button>
+      <div>{{}}</div>
+      <input type="text" v-model="name" /> <button @click="changeName">修改name</button>
+      <input type="text" v-model="bar.doo" /> <button @click="changeDoo">修改doo</button>
       <div v-html="html"></div>
     </div>
 
@@ -25,10 +27,20 @@
         data: {
           name: 'I am test.',
           age: 12,
-          html: '<button>这是⼀一个按钮</button>',
+          html: '<button>html测试</button>',
           foo: 'foooooo',
           bar: {
-            doo: 'dooooooo',
+            doo: '嵌套属性',
+          },
+        },
+        methods: {
+          changeName() {
+            // console.log('执行了吗')
+            // 注意 this
+            this.name = '调用了methods'
+          },
+          changeDoo() {
+            this.bar.doo = '调用了methods'
           },
         },
       })
@@ -36,8 +48,10 @@
       setTimeout(() => {
         app.name = '666666666666'
         app.bar.doo = 'oooo'
-        app.bar = 'oooo'
+        // console.log(app.bar.doo)
+        // app.bar = 'oooo'
       }, 1000)
+
       // console.log(app['bar.doo'])
       // app.foo = 'ffff'
       // console.log(app.bar)
